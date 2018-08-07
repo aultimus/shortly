@@ -20,23 +20,34 @@ func TestRedirectHandler(t *testing.T) {
 	req, err := http.NewRequest("GET", "/foo", nil)
 	a.NoError(err)
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	// we miss the empty in an empty store
 	rr := httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
 
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusNotFound {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
-	}
-
-	// Check the response body is what we expect.
+	// check results
+	a.Equal(http.StatusNotFound, rr.Code)
 	resp := &RedirectResponse{}
 	err = json.Unmarshal([]byte(rr.Body.String()), resp)
 	a.NoError(err)
-
 	a.NotEmpty(resp.Err)
 	a.Empty(resp.OriginalURL)
+
+	// add entry
+	stored := &db.StoredURL{OriginalURL: "http://foofoo.com/bar"}
+	err = app.store.Create("foo", stored)
+	a.NoError(err)
+
+	// check we hit the entry
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	a.Equal(http.StatusOK, rr.Code)
+	// Check results
+	resp = &RedirectResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	a.NoError(err)
+	a.Empty(resp.Err)
+	a.Equal(stored.OriginalURL, resp.OriginalURL)
 }
 
 func TestReqUnmarshal(t *testing.T) {
