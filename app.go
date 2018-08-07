@@ -1,6 +1,8 @@
 package shortly
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,8 +10,11 @@ import (
 	"time"
 
 	"github.com/aultimus/shortly/db"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
+)
+
+const (
+	LenShortened = 6
 )
 
 type App struct {
@@ -120,7 +125,6 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := &CreateRequest{}
-	spew.Dump(string(b))
 	err = json.Unmarshal(b, req)
 	if err != nil {
 		fmt.Printf("create handler failed to unmarshal bytes: %s\n", string(b))
@@ -147,17 +151,25 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) Create(req *CreateRequest) (string, error) {
-	shortenedURL := doHash(req.OriginalURL)
+	shortenedURL := Hash(req.OriginalURL)
+	fmt.Printf("Create request for [%s], hashes to [%s]\n", req.OriginalURL, shortenedURL)
+	// TODO: Check key isn't present, if it is we want to check if it is the same original URL
+	// if it isn't then we need to resolve the collision, we could append some value to the original
+	// and rehash
 
 	storedURL := &db.StoredURL{req.OriginalURL}
 	err := a.store.Create(shortenedURL, storedURL)
 	return shortenedURL, err
 }
 
-func doHash(string) string {
-	return "foo" // TODO
+func Hash(in string) string {
+	hash := md5.Sum([]byte(in))
+	s := base64.URLEncoding.EncodeToString((hash[:]))
+	return s[0:LenShortened]
 }
 
+// If we add the concept of users do we want only the creator of a url to be able to delete it?
+// If not, we could have some malicious user delete all the urls, leave unimplemented till decided
 func (a *App) DeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO
 }
