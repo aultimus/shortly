@@ -28,7 +28,7 @@ func NewApp() *App {
 	return &App{}
 }
 
-func (a *App) Init() error {
+func (a *App) Init(store db.DBer) error {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/create",
@@ -51,7 +51,7 @@ func (a *App) Init() error {
 		MaxHeaderBytes: 1 << 20,
 	}
 	a.server = server
-	a.store = db.NewMapDB()
+	a.store = store
 
 	return nil
 }

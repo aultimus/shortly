@@ -2,11 +2,42 @@ package shortly
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/aultimus/shortly/db"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestRedirectHandler(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	app.Init(db.NewMapDB())
+	req, err := http.NewRequest("GET", "/foo", nil)
+	a.NoError(err)
+
+	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	rr := httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusNotFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	// Check the response body is what we expect.
+	resp := &RedirectResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	a.NoError(err)
+
+	a.NotEmpty(resp.Err)
+	a.Empty(resp.OriginalURL)
+}
 
 func TestReqUnmarshal(t *testing.T) {
 	a := assert.New(t)
