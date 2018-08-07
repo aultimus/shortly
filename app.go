@@ -15,6 +15,8 @@ import (
 
 const (
 	LenShortened = 6
+	JSONMimeType = "application/json"
+	ContentType  = "Content-Type"
 )
 
 type App struct {
@@ -69,6 +71,7 @@ type RedirectResponse struct {
 func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &RedirectResponse{}
 	vars := mux.Vars(r)
+	w.Header().Set(ContentType, JSONMimeType)
 
 	shortenedURL := vars["url"]
 	if shortenedURL == "" {
@@ -113,6 +116,7 @@ type CreateResponse struct {
 // TODO: Add test case where mandatory field original_url is missing
 func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &CreateResponse{}
+	w.Header().Set(ContentType, JSONMimeType)
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
