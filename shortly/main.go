@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aultimus/shortly/db"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Println("shortly started")
 	app := shortly.NewApp()
 	err := app.Init(db.NewMapDB())
 	if err != nil {
