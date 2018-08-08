@@ -13,12 +13,47 @@ type StoredURL struct {
 	OriginalURL string `json:"original_string"`
 }
 
+type ErrCollision struct {
+	message string
+}
+
+func NewErrCollision(message string) *ErrCollision {
+	return &ErrCollision{
+		message: message,
+	}
+}
+
+func (e *ErrCollision) Error() string {
+	return e.message
+}
+
+type ErrDB struct {
+	message string
+}
+
+func NewErrDB(message string) *ErrDB {
+	return &ErrDB{
+		message: message,
+	}
+}
+
+func (e *ErrDB) Error() string {
+	return e.message
+}
+
 type MapDB struct {
 	m map[string]*StoredURL
 }
 
 func (m *MapDB) Create(key string, value *StoredURL) error {
-	// TODO: handle collsion - is this done per user?
+	stored, exists := m.m[key]
+	if exists {
+		if *stored == *value {
+			return nil
+		} else {
+			return NewErrCollision(fmt.Sprintf("key %s already exists with a different value", key))
+		}
+	}
 	m.m[key] = value
 	return nil
 }

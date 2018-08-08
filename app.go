@@ -83,8 +83,12 @@ func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 
 	storedURL, err := a.store.Get(shortenedURL)
 	if err != nil {
-		/// the error could possibly be more than not found, could be some db error, TODO:
-		// distinguish between the two
+		switch err.(type) {
+		case *db.ErrDB:
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// else assume a Not found error (could declare this error type and switch on it)
 		w.WriteHeader(http.StatusNotFound)
 		resp.Err = err.Error()
 	} else {
@@ -140,6 +144,19 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shortenedURL, err := a.Create(req)
+	if err != nil {
+		switch err.(type) {
+		case *db.ErrCollision:
+			// try again rather than error - TODO
+			fmt.Println(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		case *db.ErrDB:
+			fmt.Println(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
 
 	resp = &CreateResponse{ShortenedURL: shortenedURL}
 	if err != nil {

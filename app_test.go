@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/aultimus/shortly/db"
@@ -11,6 +12,17 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
+
+type DBErrStore struct {
+}
+
+func (s *DBErrStore) Create(string, *db.StoredURL) error {
+	return db.NewErrDB("foo")
+}
+
+func (s *DBErrStore) Get(string) (*db.StoredURL, error) {
+	return nil, db.NewErrDB("foo")
+}
 
 func TestRedirectHandler(t *testing.T) {
 	a := assert.New(t)
@@ -48,6 +60,84 @@ func TestRedirectHandler(t *testing.T) {
 	a.NoError(err)
 	a.Empty(resp.Err)
 	a.Equal(stored.OriginalURL, resp.OriginalURL)
+
+	// force DBError and check we return internal server error
+	app.store = &DBErrStore{}
+	req, err = http.NewRequest("GET", "/cat", nil)
+	a.NoError(err)
+
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	a.Equal(http.StatusInternalServerError, rr.Code)
+}
+
+func TestCreateHandler(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	app.Init(db.NewMapDB())
+	body := strings.NewReader(`{"original_url": "http://foobarcat.blogspot.com"}`)
+	req, err := http.NewRequest("POST", "/create", body)
+	a.NoError(err)
+
+	// create new entry
+	rr := httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	resp := &CreateResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	a.NoError(err)
+	a.Empty(resp.Err)
+	a.NotEmpty(resp.ShortenedURL)
+
+	// create same url, check that we get the same short url back
+	body = strings.NewReader(`{"original_url": "http://foobarcat.blogspot.com"}`)
+	req, err = http.NewRequest("POST", "/create", body)
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	resp1 := &CreateResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp1)
+	a.NoError(err)
+	a.Empty(resp1.Err)
+	a.NotEmpty(resp1.ShortenedURL)
+	a.Equal(resp.ShortenedURL, resp1.ShortenedURL)
+
+	// create different url, check we get different short url back
+	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
+	req, err = http.NewRequest("POST", "/create", body)
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	resp2 := &CreateResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp2)
+	a.NoError(err)
+	a.Empty(resp2.Err)
+	a.NotEmpty(resp2.ShortenedURL)
+	a.NotEqual(resp2.ShortenedURL, resp.ShortenedURL)
+
+	// force DBError and check we return internal server error
+	app.store = &DBErrStore{}
+	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
+	req, err = http.NewRequest("POST", "/create", body)
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusInternalServerError, rr.Code)
+	resp3 := &CreateResponse{}
+	err = json.Unmarshal([]byte(rr.Body.String()), resp3)
+	a.Empty(resp3.ShortenedURL)
+
+	// TODO: create collision - check that we got different URL back, easily done when we enable
+	// the custom_alias feature
 }
 
 func TestReqUnmarshal(t *testing.T) {
