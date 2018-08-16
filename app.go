@@ -36,11 +36,11 @@ func (a *App) Init(store db.DBer) error {
 
 	// The restful way to do it would be to GET /url/id but that is a bit of a longer string,
 	// we could redirect to that url?
-	router.HandleFunc("/{url}",
+	router.HandleFunc("/redirect/{url}",
 		a.RedirectJSONHandler).Methods(http.MethodGet)
 
 	router.HandleFunc("/{url}",
-		a.DeleteHandler).Methods(http.MethodDelete)
+		a.RedirectHandler).Methods(http.MethodGet)
 
 	server := &http.Server{
 		Addr:           ":8080",
@@ -65,6 +65,33 @@ type RedirectResponse struct {
 	Err         string `json:"error"`
 }
 
+// TODO: refactor out common code amongst Redirect* handlers
+// TODO: Test this handler
+func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	w.Header().Set(ContentType, "text/html")
+
+	shortenedURL := vars["url"]
+	if shortenedURL == "" {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	fmt.Printf("Handling request for shortened url %s\n", shortenedURL)
+
+	storedURL, err := a.store.Get(shortenedURL)
+	if err != nil {
+		switch err.(type) {
+		case *db.ErrDB:
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// else assume a Not found error (could declare this error type and switch on it)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Println(err.Error())
+	} else {
+		http.Redirect(w, r, storedURL.OriginalURL, http.StatusMovedPermanently)
+	}
+}
+
 // RedirectJSONHandler handles GET access to shortened urls, this endpoint is publically available
 // GET http://localhost:8080/foo
 // TODO: respond with correct status codes
@@ -79,7 +106,7 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 		b, _ := json.Marshal(resp)
 		w.Write(b)
 	}
-	fmt.Printf("Handling request for shortened url %s\n", shortenedURL)
+	fmt.Printf("Handling JSON request for shortened url %s\n", shortenedURL)
 
 	storedURL, err := a.store.Get(shortenedURL)
 	if err != nil {
@@ -186,10 +213,4 @@ func Hash(in string) string {
 	hash := md5.Sum([]byte(in))
 	s := base64.URLEncoding.EncodeToString((hash[:]))
 	return s[0:LenShortened]
-}
-
-// If we add the concept of users do we want only the creator of a url to be able to delete it?
-// If not, we could have some malicious user delete all the urls, leave unimplemented till decided
-func (a *App) DeleteHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO
 }
