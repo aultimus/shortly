@@ -13,3 +13,5 @@
 
 # binary
 shortly/shortly
+
+.env.local
