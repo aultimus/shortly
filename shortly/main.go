@@ -12,7 +12,7 @@ import (
 func main() {
 	fmt.Println("shortly started")
 	app := shortly.NewApp()
-	err := app.Init(db.NewMapDB())
+	err := app.Init(db.NewDynamoService())
 	if err != nil {
 		log.Fatal(err)
 	}

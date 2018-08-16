@@ -9,6 +9,6 @@ url shortening service written in go
 ## TODO
 * add access via api key so that we are not vulnerable to malicious url creating attacks whereby our whole short url space is filled up
 * add optional alias to create api
-* add a Delete endpoint
 * Monitoring of popularity of URLs
 * Use logging library that emits line numbers
+* Inject dynamodb creds into docker container
