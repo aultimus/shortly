@@ -12,3 +12,5 @@ url shortening service written in go
 * Monitoring of popularity of URLs
 * Use logging library that emits line numbers
 * Inject dynamodb creds into docker container
+* Do a 301 redirect on short urls and provide json response under some longer url schema
+* Add a basic HTML create frontend which accepts original urls and displays the resultant short url for the user

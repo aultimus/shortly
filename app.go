@@ -32,12 +32,12 @@ func (a *App) Init(store db.DBer) error {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/create",
-		a.CreateHandler).Methods(http.MethodPost)
+		a.CreateJSONHandler).Methods(http.MethodPost)
 
 	// The restful way to do it would be to GET /url/id but that is a bit of a longer string,
 	// we could redirect to that url?
 	router.HandleFunc("/{url}",
-		a.RedirectHandler).Methods(http.MethodGet)
+		a.RedirectJSONHandler).Methods(http.MethodGet)
 
 	router.HandleFunc("/{url}",
 		a.DeleteHandler).Methods(http.MethodDelete)
@@ -65,10 +65,10 @@ type RedirectResponse struct {
 	Err         string `json:"error"`
 }
 
-// RedirectHandler handles GET access to shortened urls, this endpoint is publically available
+// RedirectJSONHandler handles GET access to shortened urls, this endpoint is publically available
 // GET http://localhost:8080/foo
 // TODO: respond with correct status codes
-func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &RedirectResponse{}
 	vars := mux.Vars(r)
 	w.Header().Set(ContentType, JSONMimeType)
@@ -114,11 +114,10 @@ type CreateResponse struct {
 	Err          string `json:"error"`
 }
 
-// CreateHandler handles the creation of new shortened URLS. TODO: This endpoint should be protected
-// from public access
+// CreateJSONHandler handles the creation of new shortened URLS
 // curl localhost:8080/create -d '{"original_url": "http://foobarcat.blogspot.com"}'
 // TODO: Add test case where mandatory field original_url is missing
-func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &CreateResponse{}
 	w.Header().Set(ContentType, JSONMimeType)
 
