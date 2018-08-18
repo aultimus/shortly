@@ -93,7 +93,7 @@ func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RedirectJSONHandler handles GET access to shortened urls, this endpoint is publically available
-// GET http://localhost:8080/foo
+// curl http://localhost:8080/redirect/foo
 // TODO: respond with correct status codes
 func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &RedirectResponse{}
