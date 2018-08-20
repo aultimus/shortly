@@ -15,3 +15,5 @@
 shortly/shortly
 
 .env.local
+
+.elasticbeanstalk
