@@ -39,6 +39,7 @@ func TestRedirectHandler(t *testing.T) {
 	// check results
 	a.Equal(http.StatusNotFound, rr.Code)
 	resp := &RedirectResponse{}
+
 	err = json.Unmarshal([]byte(rr.Body.String()), resp)
 	a.NoError(err)
 	a.NotEmpty(resp.Err)
@@ -172,9 +173,15 @@ func TestHash(t *testing.T) {
 }
 
 type Collision struct {
+	maxCollisions int
+	numCollisions int
 }
 
 func (c *Collision) Hash(in string) string {
+	if c.numCollisions > c.maxCollisions {
+		return "bar"
+	}
+	c.numCollisions++
 	return "foo"
 }
 
@@ -186,11 +193,35 @@ func TestCollision(t *testing.T) {
 	dbMap.M["foo"] = &db.StoredURL{"bar"}
 	app.Init(dbMap)
 
-	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{})
+	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{maxCollisions: 64})
 	a.Error(err)
 
 	_, ok := err.(*db.ErrCollision)
 	a.True(ok)
+}
+
+func TestSomeCollision(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	dbMap := db.NewMapDB()
+	dbMap.M["foo"] = &db.StoredURL{"bar"}
+	app.Init(dbMap)
+
+	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{maxCollisions: 63})
+	a.NoError(err)
+}
+
+func TestCreateSameData(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	dbMap := db.NewMapDB()
+	dbMap.M["foo"] = &db.StoredURL{"bar"}
+	app.Init(dbMap)
+
+	_, err := app.Create(&CreateRequest{"bar"}, &MD5Hash{})
+	a.NoError(err)
 }
 
 // TODO: write more Hash collision errors such as one that only succeeds after x tries

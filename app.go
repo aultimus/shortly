@@ -129,7 +129,6 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	w.Write(b)
 }
 
@@ -198,20 +197,36 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func (a *App) doCreate(originalValue string, hasher Hasher) (string, error) {
-	shortenedURL := hasher.Hash(originalValue)
-	fmt.Printf("Create request for [%s], hashes to [%s]\n", originalValue, shortenedURL)
+func (a *App) doCreate(originalURL string, permutedValue string, hasher Hasher) (string, error) {
+	shortenedURL := hasher.Hash(permutedValue)
+	fmt.Printf("Create request for [%s], hashes to [%s]\n", permutedValue, shortenedURL)
 	// lets try and store it
-	storedURL := &db.StoredURL{originalValue}
-	err := a.store.Create(shortenedURL, storedURL)
+
+	storedURL, err := a.store.Get(shortenedURL)
+	if err == nil {
+		// check if data is equal
+		if storedURL.OriginalURL == originalURL {
+			return shortenedURL, nil
+		}
+
+		// collision
+		return "", db.NewErrCollision(fmt.Sprintf("key [%s] already exists", shortenedURL))
+	}
+	switch err.(type) {
+	case *db.ErrNotFound:
+		// pass
+	default:
+		return "", err
+	}
+
+	storedURL = &db.StoredURL{permutedValue}
+	err = a.store.Create(shortenedURL, storedURL)
 	return shortenedURL, err
 }
 
 func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
-	originalValue := req.OriginalURL
-
 	// attempt to generate hash and store without permutation
-	shortenedURL, err := a.doCreate(originalValue, hasher)
+	shortenedURL, err := a.doCreate(req.OriginalURL, req.OriginalURL, hasher)
 	if err == nil {
 		// success
 		return shortenedURL, err
@@ -228,8 +243,8 @@ func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
 	// permute in case of collision
 	for i := 0; i < 64; i++ {
 		suffix := strconv.Itoa(i)
-		newValue := originalValue + suffix
-		shortenedURL, err := a.doCreate(newValue, hasher)
+		newValue := req.OriginalURL + suffix
+		shortenedURL, err := a.doCreate(req.OriginalURL, newValue, hasher)
 		if err == nil {
 			// success
 			return shortenedURL, err

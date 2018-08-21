@@ -62,8 +62,6 @@ func (m *MapDB) Create(key string, value *StoredURL) error {
 	if exists {
 		if *stored == *value {
 			return nil
-		} else {
-			return NewErrCollision(fmt.Sprintf("key %s already exists with a different value", key))
 		}
 	}
 	m.M[key] = value
@@ -74,7 +72,7 @@ func (m *MapDB) Get(key string) (*StoredURL, error) {
 	var err error
 	value, exists := m.M[key]
 	if !exists {
-		err = fmt.Errorf("key %s does not exist in db", key)
+		return nil, NewErrNotFound(fmt.Sprintf("key %s does not exist in db", key))
 	}
 	return value, err
 }
