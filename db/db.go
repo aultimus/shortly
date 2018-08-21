@@ -13,47 +13,43 @@ type StoredURL struct {
 	OriginalURL string `json:"original_string"`
 }
 
+type ErrBase struct {
+	Message string
+}
+
+func (e *ErrBase) Error() string {
+	return e.Message
+}
+
 type ErrCollision struct {
-	message string
+	ErrBase
 }
 
 func NewErrCollision(message string) *ErrCollision {
 	return &ErrCollision{
-		message: message,
+		ErrBase: ErrBase{message},
 	}
 }
 
-func (e *ErrCollision) Error() string {
-	return e.message
-}
-
 type ErrDB struct {
-	message string
+	ErrBase
 }
 
 func NewErrDB(message string) *ErrDB {
 	return &ErrDB{
-		message: message,
+		ErrBase: ErrBase{message},
 	}
-}
-
-func (e *ErrDB) Error() string {
-	return e.message
 }
 
 // TODO:
 // It's crazy to have all these lines to declare an error type, can we embed some basic behaviour?
 type ErrNotFound struct {
-	message string
-}
-
-func (e *ErrNotFound) Error() string {
-	return e.message
+	ErrBase
 }
 
 func NewErrNotFound(message string) error {
 	return &ErrNotFound{
-		message: message,
+		ErrBase: ErrBase{message},
 	}
 }
 
