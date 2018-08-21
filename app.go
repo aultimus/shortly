@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/aultimus/shortly/db"
@@ -169,7 +170,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortenedURL, err := a.Create(req)
+	shortenedURL, err := a.Create(req, &MD5Hash{})
 	if err != nil {
 		switch err.(type) {
 		case *db.ErrCollision:
@@ -177,7 +178,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		case *db.ErrDB:
+		default:
 			fmt.Println(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -197,19 +198,62 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func (a *App) Create(req *CreateRequest) (string, error) {
-	shortenedURL := Hash(req.OriginalURL)
-	fmt.Printf("Create request for [%s], hashes to [%s]\n", req.OriginalURL, shortenedURL)
-	// TODO: Check key isn't present, if it is we want to check if it is the same original URL
-	// if it isn't then we need to resolve the collision, we could append some value to the original
-	// and rehash
-
-	storedURL := &db.StoredURL{req.OriginalURL}
+func (a *App) doCreate(originalValue string, hasher Hasher) (string, error) {
+	shortenedURL := hasher.Hash(originalValue)
+	fmt.Printf("Create request for [%s], hashes to [%s]\n", originalValue, shortenedURL)
+	// lets try and store it
+	storedURL := &db.StoredURL{originalValue}
 	err := a.store.Create(shortenedURL, storedURL)
 	return shortenedURL, err
 }
 
-func Hash(in string) string {
+func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
+	originalValue := req.OriginalURL
+
+	// attempt to generate hash and store without permutation
+	shortenedURL, err := a.doCreate(originalValue, hasher)
+	if err == nil {
+		// success
+		return shortenedURL, err
+	}
+
+	switch err.(type) {
+	case *db.ErrCollision:
+		// probably a collision - todo refine this assumption
+		// pass
+	default:
+		return shortenedURL, err
+	}
+
+	// permute in case of collision
+	for i := 0; i < 64; i++ {
+		suffix := strconv.Itoa(i)
+		newValue := originalValue + suffix
+		shortenedURL, err := a.doCreate(newValue, hasher)
+		if err == nil {
+			// success
+			return shortenedURL, err
+		}
+
+		switch err.(type) {
+		case *db.ErrCollision:
+			// probably a collision - todo refine this assumption
+			continue
+		default:
+			return shortenedURL, err
+		}
+	}
+	return "", db.NewErrCollision(fmt.Sprintf("failed to store %s, too many collisions", req.OriginalURL))
+}
+
+type Hasher interface {
+	Hash(string) string
+}
+
+type MD5Hash struct {
+}
+
+func (h *MD5Hash) Hash(in string) string {
 	hash := md5.Sum([]byte(in))
 	s := base64.URLEncoding.EncodeToString((hash[:]))
 	return s[0:LenShortened]

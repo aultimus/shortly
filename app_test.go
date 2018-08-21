@@ -154,17 +154,44 @@ func TestHash(t *testing.T) {
 	longURL := "http://foobarcat.blogspot.com"
 	longURL2 := "http://www.google.com"
 
-	shortURL := Hash(longURL)
-	shortURL1 := Hash(longURL)
+	hasher := MD5Hash{}
+
+	shortURL := hasher.Hash(longURL)
+	shortURL1 := hasher.Hash(longURL)
 	a.Equal(shortURL, shortURL1, "check the same long url generates the same short url")
 	a.Equal(LenShortened, len(shortURL), "check that the length of the short url is as desired")
 
-	shortURL2 := Hash(longURL2)
+	shortURL2 := hasher.Hash(longURL2)
 	a.NotEqual(shortURL, shortURL2, "check that different long urls generate different short urls")
 
-	shortURL3 := Hash(longURL[0 : len(longURL)-2])
+	shortURL3 := hasher.Hash(longURL[0 : len(longURL)-2])
 	a.NotEqual(longURL, shortURL3, "check that a subset string doesnt generate same long url")
 
-	shortURL4 := Hash(longURL + "f")
+	shortURL4 := hasher.Hash(longURL + "f")
 	a.NotEqual(longURL, shortURL4, "check that a superset string doesnt generate same long url")
 }
+
+type Collision struct {
+}
+
+func (c *Collision) Hash(in string) string {
+	return "foo"
+}
+
+func TestCollision(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	dbMap := db.NewMapDB()
+	dbMap.M["foo"] = &db.StoredURL{"bar"}
+	app.Init(dbMap)
+
+	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{})
+	a.Error(err)
+
+	_, ok := err.(*db.ErrCollision)
+	a.True(ok)
+}
+
+// TODO: write more Hash collision errors such as one that only succeeds after x tries
+// also check that the stored URL / key is alright

@@ -41,12 +41,28 @@ func (e *ErrDB) Error() string {
 	return e.message
 }
 
+// TODO:
+// It's crazy to have all these lines to declare an error type, can we embed some basic behaviour?
+type ErrNotFound struct {
+	message string
+}
+
+func (e *ErrNotFound) Error() string {
+	return e.message
+}
+
+func NewErrNotFound(message string) error {
+	return &ErrNotFound{
+		message: message,
+	}
+}
+
 type MapDB struct {
-	m map[string]*StoredURL
+	M map[string]*StoredURL
 }
 
 func (m *MapDB) Create(key string, value *StoredURL) error {
-	stored, exists := m.m[key]
+	stored, exists := m.M[key]
 	if exists {
 		if *stored == *value {
 			return nil
@@ -54,13 +70,13 @@ func (m *MapDB) Create(key string, value *StoredURL) error {
 			return NewErrCollision(fmt.Sprintf("key %s already exists with a different value", key))
 		}
 	}
-	m.m[key] = value
+	m.M[key] = value
 	return nil
 }
 
 func (m *MapDB) Get(key string) (*StoredURL, error) {
 	var err error
-	value, exists := m.m[key]
+	value, exists := m.M[key]
 	if !exists {
 		err = fmt.Errorf("key %s does not exist in db", key)
 	}
@@ -69,6 +85,6 @@ func (m *MapDB) Get(key string) (*StoredURL, error) {
 
 func NewMapDB() *MapDB {
 	return &MapDB{
-		m: make(map[string]*StoredURL),
+		M: make(map[string]*StoredURL),
 	}
 }

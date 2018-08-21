@@ -46,7 +46,7 @@ func (d *DynamoService) Create(key string, data *StoredURL) error {
 		Item:      av,
 		TableName: aws.String(tableName),
 	}
-
+	// TODO: may not sufficiently distinguish between key already existing and other db errors
 	_, err = d.svc.PutItem(input)
 	if err != nil {
 		err = NewErrDB(err.Error())
@@ -75,7 +75,7 @@ func (d *DynamoService) Get(key string) (*StoredURL, error) {
 	}
 
 	if item.Hash == "" {
-		return nil, fmt.Errorf("could not find key %s", key)
+		return nil, NewErrNotFound(fmt.Sprintf("could not find key %s", key))
 	}
 
 	return &StoredURL{item.OriginalURL}, nil
