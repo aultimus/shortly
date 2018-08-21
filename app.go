@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	LenShortened = 6
-	JSONMimeType = "application/json"
-	ContentType  = "Content-Type"
+	LenShortened  = 6
+	JSONMimeType  = "application/json"
+	ContentType   = "Content-Type"
+	maxCollisions = 64
 )
 
 type App struct {
@@ -241,7 +242,7 @@ func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
 	}
 
 	// permute in case of collision
-	for i := 0; i < 64; i++ {
+	for i := 0; i < maxCollisions; i++ {
 		suffix := strconv.Itoa(i)
 		newValue := req.OriginalURL + suffix
 		shortenedURL, err := a.doCreate(req.OriginalURL, newValue, hasher)

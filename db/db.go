@@ -41,8 +41,6 @@ func NewErrDB(message string) *ErrDB {
 	}
 }
 
-// TODO:
-// It's crazy to have all these lines to declare an error type, can we embed some basic behaviour?
 type ErrNotFound struct {
 	ErrBase
 }
