@@ -29,7 +29,7 @@ func TestRedirectHandler(t *testing.T) {
 
 	app := NewApp()
 	app.Init(db.NewMapDB())
-	req, err := http.NewRequest("GET", "/foo", nil)
+	req, err := http.NewRequest("GET", "/redirect/foo", nil)
 	a.NoError(err)
 
 	// we miss the empty in an empty store
@@ -46,7 +46,7 @@ func TestRedirectHandler(t *testing.T) {
 	a.Empty(resp.OriginalURL)
 
 	// add entry
-	stored := &db.StoredURL{OriginalURL: "http://foofoo.com/bar"}
+	stored := &db.StoredURL{OriginalURL: "http://redirect/foofoo.com/bar"}
 	err = app.store.Create("foo", stored)
 	a.NoError(err)
 
@@ -64,7 +64,7 @@ func TestRedirectHandler(t *testing.T) {
 
 	// force DBError and check we return internal server error
 	app.store = &DBErrStore{}
-	req, err = http.NewRequest("GET", "/cat", nil)
+	req, err = http.NewRequest("GET", "/redirect/cat", nil)
 	a.NoError(err)
 
 	rr = httptest.NewRecorder()
