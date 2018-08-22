@@ -34,6 +34,8 @@ func NewApp() *App {
 func (a *App) Init(store db.DBer) error {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/", a.RootHandler).Methods(http.MethodGet)
+
 	router.HandleFunc("/health",
 		a.HealthHandler).Methods(http.MethodGet)
 
@@ -64,6 +66,21 @@ func (a *App) Init(store db.DBer) error {
 
 func (a *App) Run() error {
 	return a.server.ListenAndServe()
+}
+
+func (a *App) RootHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(ContentType, "text/html")
+	// TODO: don't do everytime
+	b, err := ioutil.ReadFile("static/index.html")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		timber.Errorf(err.Error())
+		return
+	}
+	_, err = w.Write(b)
+	if err != nil {
+		timber.Errorf(err.Error())
+	}
 }
 
 func (a *App) HealthHandler(w http.ResponseWriter, r *http.Request) {
