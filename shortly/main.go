@@ -12,8 +12,11 @@ import (
 	"github.com/aultimus/shortly"
 )
 
+// gitSHA represents the SHA that this application is built from, injected at compile time
+var gitSHA string
+
 func main() {
-	fmt.Println("shortly started")
+	fmt.Printf("shortly started. Git SHA [%s]\n", gitSHA)
 
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))
