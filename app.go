@@ -39,12 +39,12 @@ func (a *App) Init(store db.DBer) error {
 	router.HandleFunc("/health",
 		a.HealthHandler).Methods(http.MethodGet)
 
-	router.HandleFunc("/create",
+	router.HandleFunc("/v1/create",
 		a.CreateJSONHandler).Methods(http.MethodPost)
 
 	// The restful way to do it would be to GET /url/id but that is a bit of a longer string,
 	// we could redirect to that url?
-	router.HandleFunc("/redirect/{url}",
+	router.HandleFunc("/v1/redirect/{url}",
 		a.RedirectJSONHandler).Methods(http.MethodGet)
 
 	router.HandleFunc("/{url}",
@@ -120,7 +120,7 @@ func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RedirectJSONHandler handles GET access to shortened urls, this endpoint is publically available
-// curl http://localhost:8080/redirect/foo
+// curl http://localhost:8080/v1/redirect/foo
 // TODO: respond with correct status codes
 func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &RedirectResponse{}
@@ -168,7 +168,7 @@ type CreateResponse struct {
 }
 
 // CreateJSONHandler handles the creation of new shortened URLS
-// curl localhost:8080/create -d '{"original_url": "http://foobarcat.blogspot.com"}'
+// curl localhost:8080/v1/create -d '{"original_url": "http://foobarcat.blogspot.com"}'
 // TODO: Add test case where mandatory field original_url is missing
 func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &CreateResponse{}

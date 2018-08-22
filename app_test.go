@@ -24,12 +24,12 @@ func (s *DBErrStore) Get(string) (*db.StoredURL, error) {
 	return nil, db.NewErrDB("foo")
 }
 
-func TestRedirectHandler(t *testing.T) {
+func TestRedirectJSONHandler(t *testing.T) {
 	a := assert.New(t)
 
 	app := NewApp()
 	app.Init(db.NewMapDB())
-	req, err := http.NewRequest("GET", "/redirect/foo", nil)
+	req, err := http.NewRequest("GET", "/v1/redirect/foo", nil)
 	a.NoError(err)
 
 	// we miss the empty in an empty store
@@ -64,7 +64,7 @@ func TestRedirectHandler(t *testing.T) {
 
 	// force DBError and check we return internal server error
 	app.store = &DBErrStore{}
-	req, err = http.NewRequest("GET", "/redirect/cat", nil)
+	req, err = http.NewRequest("GET", "/v1/redirect/cat", nil)
 	a.NoError(err)
 
 	rr = httptest.NewRecorder()
@@ -73,13 +73,13 @@ func TestRedirectHandler(t *testing.T) {
 	a.Equal(http.StatusInternalServerError, rr.Code)
 }
 
-func TestCreateHandler(t *testing.T) {
+func TestCreateJSONHandler(t *testing.T) {
 	a := assert.New(t)
 
 	app := NewApp()
 	app.Init(db.NewMapDB())
 	body := strings.NewReader(`{"original_url": "http://foobarcat.blogspot.com"}`)
-	req, err := http.NewRequest("POST", "/create", body)
+	req, err := http.NewRequest("POST", "/v1/create", body)
 	a.NoError(err)
 
 	// create new entry
@@ -96,7 +96,7 @@ func TestCreateHandler(t *testing.T) {
 
 	// create same url, check that we get the same short url back
 	body = strings.NewReader(`{"original_url": "http://foobarcat.blogspot.com"}`)
-	req, err = http.NewRequest("POST", "/create", body)
+	req, err = http.NewRequest("POST", "/v1/create", body)
 	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
@@ -112,7 +112,7 @@ func TestCreateHandler(t *testing.T) {
 
 	// create different url, check we get different short url back
 	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
-	req, err = http.NewRequest("POST", "/create", body)
+	req, err = http.NewRequest("POST", "/v1/create", body)
 	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
@@ -129,7 +129,7 @@ func TestCreateHandler(t *testing.T) {
 	// force DBError and check we return internal server error
 	app.store = &DBErrStore{}
 	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
-	req, err = http.NewRequest("POST", "/create", body)
+	req, err = http.NewRequest("POST", "/v1/create", body)
 	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky

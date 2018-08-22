@@ -21,27 +21,19 @@ Runs a webserver listening on port 8080
 
 ## API
 
-/{url} endpoint
+A website is served at the domain root for use by humans. A JSON API exists for programatically interfacing with the service, that JSON API is detailed below
 
-301 redirects to the original url represented by the short url 'foo' or returns 404 if short url not found.
+/v1/create endpoint
 ```
-curl http://localhost:8080/foo
-```
-
-
-### JSON endpoints
-
-/create endpoint
-```
-curl localhost:8080/create -d '{"original_url": "http://foobarcat.blogspot.com"}'
+curl localhost:8080/v1/create -d '{"original_url": "http://foobarcat.blogspot.com"}'
 {"shortened_url":"7RxfRd","error":""}
 ```
 
-/redirect/{url} endpoint
+/v1/redirect/{url} endpoint
 
 equivalent to /{url} endpoint but provides parsable json response.
 ```
-curl http://localhost:8080/redirect/foo
+curl http://localhost:8080/v1/redirect/foo
 {"original_url":"","error":"could not find key foo"}
 ```
 
