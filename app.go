@@ -142,8 +142,7 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreateRequest struct {
-	OriginalURL   string `json:"original_url"`
-	NumCollisions int    `json:"num_collisions"` // debug option
+	OriginalURL string `json:"original_url"`
 }
 
 type CreateResponse struct {
@@ -235,12 +234,7 @@ func (a *App) doCreate(originalURL string, permutedValue string, hasher Hasher) 
 }
 
 func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
-	// TODO: reject empty string
 	// attempt to generate hash and store without permutation
-	timber.Infof("num simulated collisions %d", req.NumCollisions)
-	if req.NumCollisions > 0 {
-		hasher = &CollisionHash{maxCollisions: req.NumCollisions}
-	}
 	shortenedURL, err := a.doCreate(req.OriginalURL, req.OriginalURL, hasher)
 	if err == nil {
 		// success
@@ -287,18 +281,4 @@ func (h *MD5Hash) Hash(in string) string {
 	hash := md5.Sum([]byte(in))
 	s := base64.URLEncoding.EncodeToString((hash[:]))
 	return s[0:LenShortened]
-}
-
-type CollisionHash struct {
-	maxCollisions int
-	numCollisions int
-}
-
-func (c *CollisionHash) Hash(in string) string {
-	if c.numCollisions > c.maxCollisions {
-		m := &MD5Hash{}
-		return m.Hash(in)
-	}
-	c.numCollisions++
-	return "foo"
 }
