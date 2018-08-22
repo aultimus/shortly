@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/aultimus/shortly/db"
+	"github.com/cocoonlife/timber"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -16,10 +16,16 @@ import (
 var gitSHA string
 
 func main() {
-	fmt.Printf("shortly started. Git SHA [%s]\n", gitSHA)
+	timber.AddLogger(timber.ConfigLogger{
+		LogWriter: new(timber.ConsoleWriter),
+		Level:     timber.DEBUG,
+		Formatter: timber.NewPatFormatter("[%D %T] [%L] %s %M"),
+	})
+
+	timber.Infof("shortly started. Git SHA [%s]", gitSHA)
 
 	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
+		timber.Errorf(http.ListenAndServe(":6060", nil))
 	}()
 
 	app := shortly.NewApp()

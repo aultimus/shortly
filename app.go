@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aultimus/shortly/db"
+	"github.com/cocoonlife/timber"
 	"github.com/gorilla/mux"
 )
 
@@ -77,7 +78,7 @@ func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	if shortenedURL == "" {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	fmt.Printf("Handling request for shortened url %s\n", shortenedURL)
+	timber.Infof("Handling request for shortened url %s", shortenedURL)
 
 	storedURL, err := a.store.Get(shortenedURL)
 	if err != nil {
@@ -88,7 +89,7 @@ func (a *App) RedirectHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// else assume a Not found error (could declare this error type and switch on it)
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Println(err.Error())
+		timber.Errorf(err.Error())
 	} else {
 		http.Redirect(w, r, storedURL.OriginalURL, http.StatusMovedPermanently)
 	}
@@ -108,7 +109,7 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 		b, _ := json.Marshal(resp)
 		w.Write(b)
 	}
-	fmt.Printf("Handling JSON request for shortened url %s\n", shortenedURL)
+	timber.Infof("Handling JSON request for shortened url %s", shortenedURL)
 
 	storedURL, err := a.store.Get(shortenedURL)
 	if err != nil {
@@ -126,7 +127,7 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(resp)
 	if err != nil {
-		fmt.Printf("failed to marshal response\n")
+		timber.Errorf("failed to marshal response")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -152,7 +153,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("create handler failed to read bytes: %s\n", err.Error())
+		timber.Errorf("create handler failed to read bytes: %s", err.Error())
 		resp.Err = err.Error()
 		b, _ = json.Marshal(resp)
 		w.WriteHeader(http.StatusBadRequest)
@@ -163,7 +164,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	req := &CreateRequest{}
 	err = json.Unmarshal(b, req)
 	if err != nil {
-		fmt.Printf("create handler failed to unmarshal bytes: %s\n", string(b))
+		timber.Errorf("create handler failed to unmarshal bytes: %s", string(b))
 		resp.Err = err.Error()
 		b, _ = json.Marshal(resp)
 		w.WriteHeader(http.StatusBadRequest)
@@ -176,11 +177,11 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 		switch err.(type) {
 		case *db.ErrCollision:
 			// try again rather than error - TODO
-			fmt.Println(err.Error())
+			timber.Errorf(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		default:
-			fmt.Println(err.Error())
+			timber.Errorf(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -192,7 +193,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	b, err = json.Marshal(resp)
 	if err != nil {
-		fmt.Printf("failed to marshal response\n")
+		timber.Errorf("failed to marshal response")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -201,7 +202,7 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) doCreate(originalURL string, permutedValue string, hasher Hasher) (string, error) {
 	shortenedURL := hasher.Hash(permutedValue)
-	fmt.Printf("Create request for [%s], hashes to [%s]\n", permutedValue, shortenedURL)
+	timber.Infof("Create request for [%s], hashes to [%s]", permutedValue, shortenedURL)
 	// lets try and store it
 
 	storedURL, err := a.store.Get(shortenedURL)
@@ -229,7 +230,7 @@ func (a *App) doCreate(originalURL string, permutedValue string, hasher Hasher) 
 func (a *App) Create(req *CreateRequest, hasher Hasher) (string, error) {
 	// TODO: reject empty string
 	// attempt to generate hash and store without permutation
-	fmt.Printf("num simulated collisions %d\n", req.NumCollisions)
+	timber.Infof("num simulated collisions %d", req.NumCollisions)
 	if req.NumCollisions > 0 {
 		hasher = &CollisionHash{maxCollisions: req.NumCollisions}
 	}
