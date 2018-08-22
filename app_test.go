@@ -136,10 +136,6 @@ func TestCreateHandler(t *testing.T) {
 
 	// check results
 	a.Equal(http.StatusInternalServerError, rr.Code)
-	resp3 := &CreateResponse{}
-	err = json.Unmarshal(rr.Body.Bytes(), resp3)
-	a.NoError(err)
-	a.Empty(resp3.ShortenedURL)
 
 	// TODO: create collision - check that we got different URL back, easily done when we enable
 	// the custom_alias feature
