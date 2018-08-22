@@ -40,7 +40,7 @@ func TestRedirectHandler(t *testing.T) {
 	a.Equal(http.StatusNotFound, rr.Code)
 	resp := &RedirectResponse{}
 
-	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	err = json.Unmarshal(rr.Body.Bytes(), resp)
 	a.NoError(err)
 	a.NotEmpty(resp.Err)
 	a.Empty(resp.OriginalURL)
@@ -57,7 +57,7 @@ func TestRedirectHandler(t *testing.T) {
 	a.Equal(http.StatusOK, rr.Code)
 	// Check results
 	resp = &RedirectResponse{}
-	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	err = json.Unmarshal(rr.Body.Bytes(), resp)
 	a.NoError(err)
 	a.Empty(resp.Err)
 	a.Equal(stored.OriginalURL, resp.OriginalURL)
@@ -89,7 +89,7 @@ func TestCreateHandler(t *testing.T) {
 	// check results
 	a.Equal(http.StatusOK, rr.Code)
 	resp := &CreateResponse{}
-	err = json.Unmarshal([]byte(rr.Body.String()), resp)
+	err = json.Unmarshal(rr.Body.Bytes(), resp)
 	a.NoError(err)
 	a.Empty(resp.Err)
 	a.NotEmpty(resp.ShortenedURL)
@@ -97,13 +97,14 @@ func TestCreateHandler(t *testing.T) {
 	// create same url, check that we get the same short url back
 	body = strings.NewReader(`{"original_url": "http://foobarcat.blogspot.com"}`)
 	req, err = http.NewRequest("POST", "/create", body)
+	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
 
 	// check results
 	a.Equal(http.StatusOK, rr.Code)
 	resp1 := &CreateResponse{}
-	err = json.Unmarshal([]byte(rr.Body.String()), resp1)
+	err = json.Unmarshal(rr.Body.Bytes(), resp1)
 	a.NoError(err)
 	a.Empty(resp1.Err)
 	a.NotEmpty(resp1.ShortenedURL)
@@ -112,13 +113,14 @@ func TestCreateHandler(t *testing.T) {
 	// create different url, check we get different short url back
 	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
 	req, err = http.NewRequest("POST", "/create", body)
+	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
 
 	// check results
 	a.Equal(http.StatusOK, rr.Code)
 	resp2 := &CreateResponse{}
-	err = json.Unmarshal([]byte(rr.Body.String()), resp2)
+	err = json.Unmarshal(rr.Body.Bytes(), resp2)
 	a.NoError(err)
 	a.Empty(resp2.Err)
 	a.NotEmpty(resp2.ShortenedURL)
@@ -128,13 +130,15 @@ func TestCreateHandler(t *testing.T) {
 	app.store = &DBErrStore{}
 	body = strings.NewReader(`{"original_url": "http://www.google.com"}`)
 	req, err = http.NewRequest("POST", "/create", body)
+	a.NoError(err)
 	rr = httptest.NewRecorder()
 	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
 
 	// check results
 	a.Equal(http.StatusInternalServerError, rr.Code)
 	resp3 := &CreateResponse{}
-	err = json.Unmarshal([]byte(rr.Body.String()), resp3)
+	err = json.Unmarshal(rr.Body.Bytes(), resp3)
+	a.NoError(err)
 	a.Empty(resp3.ShortenedURL)
 
 	// TODO: create collision - check that we got different URL back, easily done when we enable
@@ -193,7 +197,7 @@ func TestCollision(t *testing.T) {
 	dbMap.M["foo"] = &db.StoredURL{"bar"}
 	app.Init(dbMap)
 
-	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{maxCollisions: 64})
+	_, err := app.Create(&CreateRequest{OriginalURL: "http://www.google.com"}, &Collision{maxCollisions: 64})
 	a.Error(err)
 
 	_, ok := err.(*db.ErrCollision)
@@ -208,7 +212,7 @@ func TestSomeCollision(t *testing.T) {
 	dbMap.M["foo"] = &db.StoredURL{"bar"}
 	app.Init(dbMap)
 
-	_, err := app.Create(&CreateRequest{"http://www.google.com"}, &Collision{maxCollisions: 63})
+	_, err := app.Create(&CreateRequest{OriginalURL: "http://www.google.com"}, &Collision{maxCollisions: 63})
 	a.NoError(err)
 }
 
@@ -220,7 +224,7 @@ func TestCreateSameData(t *testing.T) {
 	dbMap.M["foo"] = &db.StoredURL{"bar"}
 	app.Init(dbMap)
 
-	_, err := app.Create(&CreateRequest{"bar"}, &MD5Hash{})
+	_, err := app.Create(&CreateRequest{OriginalURL: "bar"}, &MD5Hash{})
 	a.NoError(err)
 }
 
