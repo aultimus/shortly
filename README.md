@@ -45,8 +45,6 @@ curl http://localhost:8080/redirect/foo
 * add access via api key so that we are not vulnerable to malicious url creating attacks whereby our whole short url space is filled up
 * add optional alias to create api
 * Monitoring of popularity of URLs
-* Use logging library that emits line numbers
 * Inject dynamodb creds into docker container
 * Add a basic HTML create frontend which accepts original urls and displays the resultant short url for the user
 * Rate limiting of clients
-* Handle collision of url hashes
