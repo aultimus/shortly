@@ -1,0 +1,8 @@
+# plot "collision_latency.data" smooth csplines, "collision_latency.data"with points lt rgb "blue"
+# data collected from averaging 50 http requests for each collision number
+# num collisions, response time in seconds
+0, 0.098
+8, 0.170
+16, 0.200
+32, 0.242
+64, 0.341
