@@ -34,6 +34,9 @@ func NewApp() *App {
 func (a *App) Init(store db.DBer) error {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/health",
+		a.HealthHandler).Methods(http.MethodGet)
+
 	router.HandleFunc("/create",
 		a.CreateJSONHandler).Methods(http.MethodPost)
 
@@ -61,6 +64,10 @@ func (a *App) Init(store db.DBer) error {
 
 func (a *App) Run() error {
 	return a.server.ListenAndServe()
+}
+
+func (a *App) HealthHandler(w http.ResponseWriter, r *http.Request) {
+	// pass - implicit 200 OK
 }
 
 type RedirectResponse struct {
