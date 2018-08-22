@@ -39,6 +39,9 @@ func (a *App) Init(store db.DBer) error {
 	router.HandleFunc("/health",
 		a.HealthHandler).Methods(http.MethodGet)
 
+	router.HandleFunc("/create",
+		a.CreateHandler).Methods(http.MethodGet)
+
 	router.HandleFunc("/v1/create",
 		a.CreateJSONHandler).Methods(http.MethodPost)
 
@@ -158,6 +161,33 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
+// CreateHandler provides the create functionality for the website
+func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(ContentType, "text/html")
+	err := r.ParseForm()
+	if err != nil {
+		timber.Errorf(err.Error())
+	}
+	originalURL := r.Form.Get("url")
+
+	shortenedURL, err := a.Create(&CreateRequest{originalURL}, &MD5Hash{})
+	if err != nil {
+		switch err.(type) {
+		case *db.ErrCollision:
+			timber.Errorf(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		default:
+			timber.Errorf(err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// TODO: write proper html
+	w.Write([]byte(shortenedURL))
+}
+
 type CreateRequest struct {
 	OriginalURL string `json:"original_url"`
 }
@@ -199,7 +229,6 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err.(type) {
 		case *db.ErrCollision:
-			// try again rather than error - TODO
 			timber.Errorf(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return

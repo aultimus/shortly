@@ -42,5 +42,5 @@ curl http://localhost:8080/v1/redirect/foo
 * add optional alias to create api
 * Monitoring of popularity of URLs
 * Inject dynamodb creds into docker container
-* Add a basic HTML create frontend which accepts original urls and displays the resultant short url for the user
 * Rate limiting of clients
+* Add handler for calls to favicon.ico
