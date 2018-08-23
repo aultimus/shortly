@@ -18,6 +18,11 @@ go run shortly/main.go
 ```
 Runs a webserver listening on port 8080
 
+Alternatively you can use build.sh and run.sh scripts to build and run the app in a docker image
+
+# Deployment
+
+After building, run push.sh to run the docker image to ECR, and then upload Dockerrun.aws.json from the root directory of this project to the aws EB console.
 
 ## API
 
@@ -44,3 +49,4 @@ curl http://localhost:8080/v1/redirect/foo
 * Inject dynamodb creds into docker container
 * Rate limiting of clients
 * Add handler for calls to favicon.ico
+* Vendor deps
