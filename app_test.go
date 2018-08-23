@@ -226,3 +226,33 @@ func TestCreateSameData(t *testing.T) {
 
 // TODO: write more Hash collision errors such as one that only succeeds after x tries
 // also check that the stored URL / key is alright
+
+func TestHasPrefix(t *testing.T) {
+	a := assert.New(t)
+
+	// TODO: use test data struct and range over
+	r, err := EnsurePrefix("www.google.com")
+	a.NoError(err)
+	a.Equal("http://www.google.com", r)
+
+	r, err = EnsurePrefix("http://www.google.com")
+	a.NoError(err)
+	a.Equal("http://www.google.com", r)
+
+	r, err = EnsurePrefix("ftp://www.google.com")
+	a.NoError(err)
+	a.Equal("ftp://www.google.com", r)
+
+	r, err = EnsurePrefix("blah://www.google.com")
+	a.NoError(err)
+	a.Equal("blah://www.google.com", r)
+
+	r, err = EnsurePrefix("http://somesite.net")
+	a.NoError(err)
+	a.Equal("http://somesite.net", r)
+
+	r, err = EnsurePrefix("somesite.net")
+	a.NoError(err)
+	a.Equal("http://somesite.net", r)
+
+}

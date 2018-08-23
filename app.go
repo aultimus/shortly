@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -163,6 +164,18 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
+// TODO: maybe we should pass around a net.url.URL object rather than a string
+func EnsurePrefix(originalURL string) (string, error) {
+	u, err := url.Parse(originalURL)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+	return u.String(), nil
+}
+
 type ResultTemplateData struct {
 	PageTitle   string
 	OriginalURL string
@@ -176,8 +189,14 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		timber.Errorf(err.Error())
+		return
 	}
 	originalURL := r.Form.Get("url")
+	originalURL, err = EnsurePrefix(originalURL)
+	if err != nil {
+		timber.Errorf(err.Error())
+		return
+	}
 
 	shortenedURL, err := a.Create(&CreateRequest{originalURL}, &MD5Hash{})
 	if err != nil {
