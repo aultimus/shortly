@@ -2,7 +2,7 @@
 <body>
 <header>{{.PageTitle}}</header>
     {{if .Success}}
-        The short URL {{ .ShortURL}} has been generated from the original URL {{ .OriginalURL}}
+        The short URL <a href="http://www.{{ .ShortURL}}">{{ .ShortURL}}</a> has been generated from the original URL {{ .OriginalURL}} and is available for use
     {{else}}
         I'm sorry, something went wrong!
     {{end}}

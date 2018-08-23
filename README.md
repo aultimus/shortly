@@ -1,6 +1,8 @@
 # shortly
 url shortening service written in go
 
+There is a hosted instance of this project managed by myself (aultimus) available at sh.foobarcat.com
+
 ## Design
 * For the shortened URLs using base64 encoding, a 6 letter long key has been chosen granting 64^6 possible values (over 68 billion)
 * This is a userless service so there will be no delete functionality and a second user requesting the same link will receive the same value as the first

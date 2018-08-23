@@ -21,6 +21,7 @@ const (
 	JSONMimeType  = "application/json"
 	ContentType   = "Content-Type"
 	maxCollisions = 64
+	domainName    = "sh.foobarcat.com" // TODO: inject via docker?
 )
 
 type App struct {
@@ -195,7 +196,7 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	templateData := ResultTemplateData{
 		PageTitle:   "Success!",
 		OriginalURL: originalURL,
-		ShortURL:    shortenedURL, // TODO: should report with hostname with a clicky link
+		ShortURL:    domainName + "/" + shortenedURL,
 		Success:     true,
 	}
 
