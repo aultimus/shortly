@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -161,6 +162,13 @@ func (a *App) RedirectJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
+type ResultTemplateData struct {
+	PageTitle   string
+	OriginalURL string
+	ShortURL    string
+	Success     bool
+}
+
 // CreateHandler provides the create functionality for the website
 func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(ContentType, "text/html")
@@ -183,9 +191,25 @@ func (a *App) CreateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// TODO: handle error case with html? - currently we just 500
+	templateData := ResultTemplateData{
+		PageTitle:   "Success!",
+		OriginalURL: originalURL,
+		ShortURL:    shortenedURL, // TODO: should report with hostname with a clicky link
+		Success:     true,
+	}
 
-	// TODO: write proper html
-	w.Write([]byte(shortenedURL))
+	t, err := template.New("result.html").ParseFiles("templates/result.html")
+	if err != nil {
+		timber.Errorf(err.Error())
+		return
+	}
+
+	err = t.Execute(w, templateData)
+	if err != nil {
+		timber.Errorf(err.Error())
+		return
+	}
 }
 
 type CreateRequest struct {

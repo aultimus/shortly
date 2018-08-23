@@ -1,0 +1,10 @@
+<html>
+<body>
+<header>{{.PageTitle}}</header>
+    {{if .Success}}
+        The short URL {{ .ShortURL}} has been generated from the original URL {{ .OriginalURL}}
+    {{else}}
+        I'm sorry, something went wrong!
+    {{end}}
+</body>
+</html>
