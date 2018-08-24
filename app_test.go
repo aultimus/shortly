@@ -230,29 +230,21 @@ func TestCreateSameData(t *testing.T) {
 func TestHasPrefix(t *testing.T) {
 	a := assert.New(t)
 
-	// TODO: use test data struct and range over
-	r, err := EnsurePrefix("www.google.com")
-	a.NoError(err)
-	a.Equal("http://www.google.com", r)
+	var testData = []struct {
+		in  string
+		out string
+	}{
+		{"www.google.com", "http://www.google.com"},
+		{"http://www.google.com", "http://www.google.com"},
+		{"ftp://www.google.com", "ftp://www.google.com"},
+		{"blah://www.google.com", "blah://www.google.com"},
+		{"http://somesite.net", "http://somesite.net"},
+		{"somesite.net", "http://somesite.net"},
+	}
 
-	r, err = EnsurePrefix("http://www.google.com")
-	a.NoError(err)
-	a.Equal("http://www.google.com", r)
-
-	r, err = EnsurePrefix("ftp://www.google.com")
-	a.NoError(err)
-	a.Equal("ftp://www.google.com", r)
-
-	r, err = EnsurePrefix("blah://www.google.com")
-	a.NoError(err)
-	a.Equal("blah://www.google.com", r)
-
-	r, err = EnsurePrefix("http://somesite.net")
-	a.NoError(err)
-	a.Equal("http://somesite.net", r)
-
-	r, err = EnsurePrefix("somesite.net")
-	a.NoError(err)
-	a.Equal("http://somesite.net", r)
-
+	for _, td := range testData {
+		r, err := EnsurePrefix(td.in)
+		a.NoError(err)
+		a.Equal(td.out, r)
+	}
 }
