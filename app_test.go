@@ -9,7 +9,6 @@ import (
 
 	"github.com/aultimus/shortly/db"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,7 +145,6 @@ func TestReqUnmarshal(t *testing.T) {
 	r := &CreateRequest{}
 	b := []byte(`{"original_url": "http://foobarcat.blogspot.com"}`)
 	err := json.Unmarshal(b, r)
-	spew.Dump(err)
 	a.NoError(err)
 }
 
@@ -247,4 +245,90 @@ func TestHasPrefix(t *testing.T) {
 		a.NoError(err)
 		a.Equal(td.out, r)
 	}
+}
+
+func TestRedirectHandler(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	app.Init(db.NewMapDB())
+	req, err := http.NewRequest("GET", "/foo", nil)
+	a.NoError(err)
+
+	// we miss the empty in an empty store
+	rr := httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusNotFound, rr.Code)
+
+	// add entry
+	stored := &db.StoredURL{OriginalURL: "http://bar"}
+	err = app.store.Create("foo", stored)
+	a.NoError(err)
+
+	// check we hit the entry
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	a.Equal(http.StatusMovedPermanently, rr.Code)
+	// Check results
+
+	// force DBError and check we return internal server error
+	app.store = &DBErrStore{}
+	req, err = http.NewRequest("GET", "/cat", nil)
+	a.NoError(err)
+
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	a.Equal(http.StatusInternalServerError, rr.Code)
+}
+
+func TestCreateHandler(t *testing.T) {
+	a := assert.New(t)
+
+	app := NewApp()
+	app.Init(db.NewMapDB())
+	req, err := http.NewRequest("GET", "/create?url=http://foobarcat.blogspot.com", nil)
+
+	a.NoError(err)
+
+	// create new entry
+	rr := httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	a.Equal("text/html", rr.Header().Get(ContentType))
+
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	a.Equal("text/html", rr.Header().Get(ContentType))
+
+	// create different url
+	req, err = http.NewRequest("GET", "/create?url=http://www.google.com", nil)
+	a.NoError(err)
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusOK, rr.Code)
+	a.Equal("text/html", rr.Header().Get(ContentType))
+
+	// force DBError and check we return internal server error
+	app.store = &DBErrStore{}
+	req, err = http.NewRequest("GET", "/create?url=http://www.google.com", nil)
+	a.NoError(err)
+	rr = httptest.NewRecorder()
+	app.server.Handler.ServeHTTP(rr, req) // kind of hacky
+
+	// check results
+	a.Equal(http.StatusInternalServerError, rr.Code)
+
+	// TODO: create collision - check that we got different URL back, easily done when we enable
+	// the custom_alias feature
 }
