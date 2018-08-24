@@ -269,6 +269,15 @@ func (a *App) CreateJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// should we return this potentially updated OriginalURL, then we could test the correction at
+	// the handler level
+	req.OriginalURL, err = EnsurePrefix(req.OriginalURL)
+	if err != nil {
+		timber.Errorf(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	shortenedURL, err := a.Create(req, &MD5Hash{})
 	if err != nil {
 		switch err.(type) {
