@@ -1,7 +1,7 @@
 # shortly
 url shortening service written in go
 
-There is a hosted instance of this project managed by myself (aultimus) available at sh.foobarcat.com
+There is a hosted instance of this project managed by myself (aultimus) available at [sh.foobarcat.com](http://sh.foobarcat.com).
 
 ## Design
 * For the shortened URLs using base64 encoding, a 6 letter long key has been chosen granting 64^6 possible values (over 68 billion)
@@ -52,3 +52,4 @@ curl http://localhost:8080/v1/redirect/foo
 * Rate limiting of clients
 * Add handler for calls to favicon.ico
 * Vendor deps
+* Enable previews via a subdomain e.g. preview.sh.foobarcat.com which provides info on the redirect
