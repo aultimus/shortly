@@ -1,13 +1,31 @@
 <html>
-<header><title>Welcome to shortly a URL Shortening Service</title></header>
-<body>
+  <head>
+    <style>
+      img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      form {
+        margin: 0 auto;
+        width:250px;
+      }
+    </style>
+  </head>
 
-Please enter a long URL that you would like to be shortened
-<form action="/create">
-    URL:<br>
-    <input type="text" name="url" value="">
-    <br><br>
-    <input type="submit" value="Submit">
-  </form>
-</body>
+  <header><title>Shortly</title></header>
+  <body>
+    <h1 align="center"> Shortly</h1>
+    <center>Let this short dog shorten your URL for you</center>
+    <br>
+    <img src="https://s3-us-west-2.amazonaws.com/publicmatthewault/short_zephy_clipped.png" class="center" alt="a Voracious Chihuaha" style="width:189px;height:372px;" title="a voracious chihuaha">
+    <br>
+    <form action="/create">
+        <br>
+        <input type="submit" value="Submit" style="float: right" />
+        <div style="overflow: hidden; padding-right: .5em;">
+          <input type="text" name="url" value="" style="width: 100%;" />
+        </div>
+    </form>
+  </body>
 </html>

@@ -1,10 +1,34 @@
 <html>
-<body>
-<header>{{.PageTitle}}</header>
+  <head>
+    <style>
+      img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      form {
+        margin: 0 auto;
+        width:250px;
+      }
+    </style>
+  </head>
+
+  <header><title>Shortly</title></header>
+  <body>
+    <h1 align="center"> Shortly</h1>
+    <center>Let this short dog shorten your URL for you</center>
+    <br>
+    <img src="https://s3-us-west-2.amazonaws.com/publicmatthewault/short_zephy_clipped.png" class="center" alt="a Voracious Chihuaha" style="width:189px;height:372px;" title="a voracious chihuaha">
+    <br>
     {{if .Success}}
-        The short URL <a href="http://www.{{ .ShortURL}}">{{ .ShortURL}}</a> has been generated from the original URL {{ .OriginalURL}} and is available for use
-    {{else}}
-        I'm sorry, something went wrong!
+    <center>
+    You fed the short little dog the URL {{ .OriginalURL}} and he made a short little URL for you!<br><br>
+    <a href="http://www.{{ .ShortURL}}">{{ .ShortURL}}</a>
+    </center>
+      {{else}}
+      <center>
+      Uh oh, something went wrong, don't be sad though, look at those eyes
+      </center>
     {{end}}
 </body>
 </html>
