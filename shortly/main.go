@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/aultimus/shortly/db"
@@ -27,9 +28,10 @@ func main() {
 	go func() {
 		timber.Errorf(http.ListenAndServe(":6060", nil))
 	}()
-
+	portNum := flag.String("port", "8080", "specify port number")
+	flag.Parse()
 	app := shortly.NewApp()
-	err := app.Init(db.NewDynamoService())
+	err := app.Init(db.NewDynamoService(), *portNum)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -34,7 +34,7 @@ func NewApp() *App {
 	return &App{}
 }
 
-func (a *App) Init(store db.DBer) error {
+func (a *App) Init(store db.DBer, portNum string) error {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", a.RootHandler).Methods(http.MethodGet)
@@ -57,7 +57,7 @@ func (a *App) Init(store db.DBer) error {
 		a.RedirectHandler).Methods(http.MethodGet)
 
 	server := &http.Server{
-		Addr:           ":8080",
+		Addr:           ":" + portNum,
 		Handler:        router,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
