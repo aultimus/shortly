@@ -41,6 +41,14 @@ func NewApp() *App {
 // GET /dashboard	User’s main UI
 // GET /settings	Optional account settings
 
+// For auth we could either use sessions or JWTs. Sessions is likely easier
+// as it is browser-native. However, we will have to store session data in db.
+// We can just set header: Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Strict
+// This is how login works on 99% of websites.
+// Register	User submits email/password → server hashes and stores credentials
+// Login	User submits credentials → server verifies → issues session/JWT
+// Request URLs	Frontend sends request with session or JWT → server identifies user and returns their URLs
+
 // API Routes (if we wanted to expose a json api):
 // POST	/api/v1/signup	Create user	Optional if self-service
 // POST	/api/v1/login	Authenticate user	Returns JWT
