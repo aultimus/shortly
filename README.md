@@ -45,11 +45,10 @@ curl http://localhost:8080/v1/redirect/foo
 ```
 
 ## TODO
-* add access via api key so that we are not vulnerable to malicious url creating attacks whereby our whole short url space is filled up
-* add optional alias to create api
+* Switch to postgres backend
+* put api endpoints under sub-path
+* make endpoints more restful. have a urls endpoint, not a create endpoint
+* add react frontend with login, registration, url creation, url deletion, view url count features
 * Monitoring of popularity of URLs
-* Inject dynamodb creds into docker container
 * Rate limiting of clients
-* Add handler for calls to favicon.ico
-* Vendor deps
 * Enable previews via a subdomain e.g. preview.sh.foobarcat.com which provides info on the redirect
