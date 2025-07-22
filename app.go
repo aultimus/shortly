@@ -34,6 +34,24 @@ func NewApp() *App {
 	return &App{}
 }
 
+// TODO Routes to add:
+// HTML Routes:
+// GET /login
+// GET /signup
+// GET /dashboard	User’s main UI
+// GET /settings	Optional account settings
+
+// API Routes (if we wanted to expose a json api):
+// POST	/api/v1/signup	Create user	Optional if self-service
+// POST	/api/v1/login	Authenticate user	Returns JWT
+// Require JWT:
+// GET	/api/v1/me	Get current user profile	JWT required
+// POST	/api/v1/urls	Create new short URL (body has original)
+// GET	/api/v1/urls	List user’s URLs
+// GET	/api/v1/urls/{id}	Get one URL by ID (user's own)
+// DELETE	/api/v1/urls/{id}	Delete one URL (user's own)
+
+
 func (a *App) Init(store db.DBer, portNum string) error {
 	router := mux.NewRouter()
 

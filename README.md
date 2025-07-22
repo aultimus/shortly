@@ -45,10 +45,9 @@ curl http://localhost:8080/v1/redirect/foo
 ```
 
 ## TODO
-* Switch to postgres backend
 * put api endpoints under sub-path
 * make endpoints more restful. have a urls endpoint, not a create endpoint
-* add react frontend with login, registration, url creation, url deletion, view url count features
+* add html endpoints with login, registration, url creation, url deletion, view url count features
 * Monitoring of popularity of URLs
 * Rate limiting of clients
 * Enable previews via a subdomain e.g. preview.sh.foobarcat.com which provides info on the redirect
