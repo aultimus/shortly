@@ -8,3 +8,5 @@ run:
 
 up-dev-db:
 	docker compose up db
+	# to verify run:
+	# PGPASSWORD=shortly psql -h localhost -U shortly -d shortly
