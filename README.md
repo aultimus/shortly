@@ -52,3 +52,9 @@ curl http://localhost:8080/v1/redirect/foo
 * Monitoring of popularity of URLs
 * Rate limiting of clients
 * Enable previews via a subdomain e.g. preview.sh.foobarcat.com which provides info on the redirect
+
+## Dev setup
+
+```
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```

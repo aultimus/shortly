@@ -31,7 +31,14 @@ func main() {
 	portNum := flag.String("port", "8080", "specify port number")
 	flag.Parse()
 	app := shortly.NewApp()
-	err := app.Init(db.NewDynamoService(), *portNum)
+	connStr := "host=localhost port=5432 user=shortly password=shortly dbname=shortly sslmode=disable"
+	pgdb, err := db.NewPostgresDB(connStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pgdb.Close()
+
+	err = app.Init(pgdb, *portNum)
 	if err != nil {
 		log.Fatal(err)
 	}
